@@ -12,6 +12,7 @@
   <!-- React app -->
   <div id='app'></div>
 
+  <!-- Redux Functions -->
   <script type='text/javascript'>
     function generateId () {
       return Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36);
@@ -97,12 +98,24 @@
       }
     }
 
+    function loading (state = true, action){
+        console.log(action);
+        switch(action.type){
+            case RECEIVE_DATA :
+                return false;
+            default :
+                return state;
+        }
+    }
+
     const store = Redux.createStore(Redux.combineReducers({
       todos,
       goals,
+      loading
     }))
 
   </script>
+  
   <!-- React App Init -->
   <script type="text/babel">
     function List (props) {
@@ -137,11 +150,20 @@
 
         }
         removeItem = todo =>{
-            //e.preventDefault();
             this.props.store.dispatch(removeTodoAction(todo.id))
+            return API.deleteTodo(todo.id)
+                .catch(()=> {
+                    alert("Fail to delete from API");
+                    this.props.store.dispatch(addTodoAction(todo))
+                })
         }
         toggleItem = id =>{
             this.props.store.dispatch(toggleTodoAction(id))
+            return API.saveTodoToggle(id)
+                .catch(() => {
+                    alert('Fail to update toggle from API');
+                    this.props.store.dispatch(toggleTodoAction(id));
+                })
         }
         render(){
             return (
@@ -178,10 +200,13 @@
 
         }
         removeItem = goal =>{
-            //e.preventDefault();
             this.props.store.dispatch(removeGoalAction(goal.id))
-        }
-        
+            return API.deleteTodo(goal.id)
+                .catch(()=> {
+                    alert("Fail to delete from API");
+                    this.props.store.dispatch(addGoalAction(goal))
+                })
+        }        
 
         render(){
             return (
@@ -219,7 +244,11 @@
         }
         render(){
             const {store} = this.props;
-            const { todos, goals } = store.getState();
+            const { todos, goals, loading } = store.getState();
+
+            if(loading)
+                return (<h3>loading</h3>)
+            
 
             return(
                 <div>
